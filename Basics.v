@@ -1443,6 +1443,7 @@ Theorem identity_fn_applied_twice :
   (forall (x : bool), f x = x) ->
   forall (b : bool), f (f b) = b.
 Proof.
+  (* 'rewrite !' form was found by me on the official tactics reference page of 'rewrite'. *)
   intros f Hid b. rewrite ! Hid. reflexivity.
 Qed.
 
