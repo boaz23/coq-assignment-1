@@ -1020,7 +1020,7 @@ Proof.
       rewrite -> roundtrip_double. simpl.
       rewrite -> IHb'. reflexivity.
       rewrite -> Eb'nZ. discriminate.
-Qed.
+Admitted.
 
 (** [] *)
 
