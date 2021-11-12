@@ -777,8 +777,31 @@ Qed.
     (a) First, write a function to convert natural numbers to binary
         numbers. *)
 
-Fixpoint nat_to_bin (n:nat) : bin
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint nat_to_bin (n:nat) : bin :=
+  match n with
+  | 0 => Z
+  | S n' => incr (nat_to_bin n')
+  end.
+
+Example test_nat_to_bin1: nat_to_bin 0 = Z.
+Proof.
+  reflexivity.
+Qed.
+
+Example test_nat_to_bin2: nat_to_bin 1 = B1 Z.
+Proof.
+  reflexivity.
+Qed.
+
+Example test_nat_to_bin3: nat_to_bin 2 = B0 (B1 Z).
+Proof.
+  reflexivity.
+Qed.
+
+Example test_nat_to_bin4: nat_to_bin 6 = B0 (B1 (B1 Z)).
+Proof.
+  reflexivity.
+Qed.
 
 (** Prove that, if we start with any [nat], convert it to binary, and
     convert it back, we get the same [nat] we started with.  (Hint: If
@@ -788,7 +811,11 @@ Fixpoint nat_to_bin (n:nat) : bin
 
 Theorem nat_bin_nat : forall n, bin_to_nat (nat_to_bin n) = n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n. induction n as [| n' IHn'].
+  - reflexivity.
+  - simpl. rewrite -> bin_to_nat_pres_incr.
+    rewrite -> IHn'. reflexivity.
+Qed.
 
 (** (b) One might naturally expect that we could also prove the
         opposite direction -- that starting with a binary number,
@@ -799,7 +826,13 @@ Proof.
         get it clear in your mind before going on to the next
         part.) *)
 
-(* FILL IN HERE *)
+(*
+  (I looked at the theorm before writing this.)
+  The problem seems to be that the roundtrip from bin to nat back to bin
+  also normalizes the binary number (removes leading zeroeos).
+  So if the binary number had a leading zero, the roundtrip will not
+  be exactly the same representation (no leading zero).
+*)
 
 (** (c) Define a normalization function -- i.e., a function
         [normalize] going directly from [bin] to [bin] (i.e., _not_ by
@@ -837,12 +870,157 @@ Proof.
         strategy for designing algorithms that are easy to verify is to
         make your recursions as simple as possible. *)
 
-Fixpoint normalize (b:bin) : bin
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint normalize (b:bin) : bin :=
+  match b with
+  | Z => Z
+  | B0 b' => (
+    let nb' := normalize b' in
+      match nb' with
+      | Z => Z
+      | _ => B0 nb'
+      end
+  )
+  | B1 b' => B1 (normalize b')
+  end.
+
+Example test_normalize_1: normalize Z = Z.
+Proof. reflexivity. Qed.
+
+Example test_normalize_2: normalize (B0 (B0 Z)) = Z.
+Proof. reflexivity. Qed.
+
+Example test_normalize_3: normalize (B1 (B0 (B0 Z))) = B1 Z.
+Proof. reflexivity. Qed.
+
+Example test_normalize_4: normalize (B1 (B0 (B1 (B0 (B0 Z))))) = B1 (B0 (B1 Z)).
+Proof. reflexivity. Qed.
+
+Example test_normalize_5: normalize (B0 (B0 (B0 (B0 (B1 Z))))) = B0 (B0 (B0 (B0 (B1 Z)))).
+Proof. reflexivity. Qed.
+
+Example test_normalize_6: normalize (B1 (B0 (B0 (B0 (B0 (B1 Z)))))) = B1 (B0 (B0 (B0 (B0 (B1 Z))))).
+Proof. reflexivity. Qed.
+
+Theorem normalize_Z_is_0: forall (b: bin),
+  (normalize b = Z) -> (bin_to_nat b) = 0.
+Proof.
+  intros b. induction b as [| b' IHb' | b IHb'].
+  - reflexivity.
+  - simpl. rewrite -> add_0_r.
+    destruct (normalize b') as [| _b | _b] eqn:Eb'nZ.
+    + intros _H. rewrite -> ! IHb'. reflexivity. tauto.
+    + discriminate.
+    + discriminate.
+  - simpl. discriminate.
+Qed.
+
+Theorem nat_double: forall (n: nat),
+  n + n = 2 * n.
+Proof.
+  intros n. simpl.
+  rewrite -> add_0_r. reflexivity.
+Qed.
+
+Theorem double_n_neq_0: forall (n: nat),
+  (n <> 0) -> (n + n <> 0).
+Proof.
+  intros n. rewrite -> nat_double. intros H.
+  destruct n as [| n'].
+  - contradiction.
+  - discriminate.
+Qed.
+
+Theorem bin_norm_not_Z: forall (b: bin),
+  (normalize b <> Z) -> (bin_to_nat b <> 0).
+Proof.
+  intros b. induction b as [| b' IHb' | b IHb'].
+  - simpl. contradiction.
+  - simpl. rewrite -> add_0_r.
+    destruct (normalize b') as [| _b | _b] eqn:Eb'nZ.
+    + contradiction.
+    + intros _H. apply double_n_neq_0.
+      apply IHb'. discriminate.
+    + intros _H. apply double_n_neq_0.
+      apply IHb'. discriminate.
+  - simpl. discriminate.
+Qed.
+
+Theorem nat_to_bin_double: forall (n: nat),
+  (n <> 0) -> (nat_to_bin(2 * n) = B0 (nat_to_bin n)).
+Admitted.
+(* Proof.
+  intros n. intros H. induction n as [| n' IHn'].
+  - contradiction.
+  - simpl.
+Qed. *)
+
+Theorem roundtrip_double: forall (b: bin),
+  (normalize b <> Z) ->
+  (nat_to_bin((bin_to_nat b) + ((bin_to_nat b) + 0)) = B0 (nat_to_bin (bin_to_nat b))).
+Proof.
+  intros b. intros H. rewrite -> add_0_r.
+  rewrite -> nat_double. rewrite -> nat_to_bin_double.
+  reflexivity.
+  (* prove bin_to_nat b <> 0 *)
+  (* inspired by https://www.cs.cornell.edu/courses/cs3110/2018sp/a5/coq-tactics-cheatsheet.htm *)
+  apply bin_norm_not_Z. exact H.
+Qed.
 
 Theorem bin_nat_bin : forall b, nat_to_bin (bin_to_nat b) = normalize b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b. induction b as [| b' IHb' | b' IHb'].
+  (* Z *)
+  - (* only constructors. reflexivity can take care of it. *)
+    reflexivity.
+  (* B0 *)
+  - (* need to open up the (B0 b') to isolate b' *)
+    simpl.
+    (*
+      as per the definition of normalize,
+      the result depends on the result of the recursion.
+      destruct here to match the "match" in normalize.
+    *)
+    destruct (normalize b') as [| _b | _b] eqn:Eb'nZ.
+    (* Z *)
+    + rewrite -> ! normalize_Z_is_0. reflexivity.
+      (*
+        using the normalize_Z_is_0 caused Coq to generate
+        a goal to make sure the condition of the implies
+        clause of the theorem holds.
+        This is the proof it is true
+        The proof is the exact assumption the destruct gave us:
+        (normalize b') = Z.
+      *)
+      exact Eb'nZ.
+    (* B0 *)
+    + (*
+        Extract B0 outside on the left to match the right.
+        Then, we will be able to use the induction hypothesis.
+      *)
+      rewrite -> roundtrip_double. rewrite -> IHb'. reflexivity.
+      (* prove that (normalize b') <> Z *)
+      rewrite -> Eb'nZ. discriminate.
+    (* B1 *)
+    (* same case as B0 (as in the definition of normalize) *)
+    + rewrite -> roundtrip_double. rewrite -> IHb'. reflexivity.
+      rewrite -> Eb'nZ. discriminate.
+  - (* need to open up the (B0 b') to isolate b' *)
+    simpl.
+    destruct (normalize b') as [| _b | _b] eqn:Eb'nZ.
+    + rewrite -> ! normalize_Z_is_0. reflexivity.
+      exact Eb'nZ.
+    + (*
+        Extract B0 outside on the left to match
+        the B1 on the outside of the right.
+      *)
+      rewrite -> roundtrip_double. simpl.
+      rewrite -> IHb'. reflexivity.
+      rewrite -> Eb'nZ. discriminate.
+    + (* same case as B0 (as in the definition of normalize) *)
+      rewrite -> roundtrip_double. simpl.
+      rewrite -> IHb'. reflexivity.
+      rewrite -> Eb'nZ. discriminate.
+Qed.
 
 (** [] *)
 

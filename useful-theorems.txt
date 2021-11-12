@@ -5,6 +5,7 @@ plus_n_Sm: forall n m : nat, S (n + m) = n + S m
 add_assoc: forall n m p : nat, (n + (m + p)) = ((n + m) + p)
 add_comm: forall n m : nat, n + m = m + n
 add_shuffle3: forall n m p : nat, (n + (m + p)) = (m + (n + p))
+double_plus : forall n, double n = n + n
 
 mul_0_r: forall n : nat, n * 0 = 0
 mult_n_O: forall n : nat, 0 = n * 0
