@@ -949,6 +949,7 @@ Theorem count_member_nonzero : forall (s : bag),
 Proof.
   intros s. reflexivity.
 Qed.
+(** [] *)
 
 (** The following lemma about [leb] might help you in the next
     exercise (it will also be useful in later chapters). *)
