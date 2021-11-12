@@ -901,18 +901,10 @@ Proof. reflexivity. Qed.
 Example test_normalize_6: normalize (B1 (B0 (B0 (B0 (B0 (B1 Z)))))) = B1 (B0 (B0 (B0 (B0 (B1 Z))))).
 Proof. reflexivity. Qed.
 
-Theorem normalize_Z_is_0: forall (b: bin),
-  (normalize b = Z) -> (bin_to_nat b) = 0.
-Proof.
-  intros b. induction b as [| b' IHb' | b IHb'].
-  - reflexivity.
-  - simpl. rewrite -> add_0_r.
-    destruct (normalize b') as [| _b | _b] eqn:Eb'nZ.
-    + intros _H. rewrite -> ! IHb'. reflexivity. tauto.
-    + discriminate.
-    + discriminate.
-  - simpl. discriminate.
-Qed.
+(*
+  Many tactics were taken from:
+  https://www.cs.cornell.edu/courses/cs3110/2018sp/a5/coq-tactics-cheatsheet.html
+*)
 
 Theorem nat_double: forall (n: nat),
   n + n = 2 * n.
@@ -924,35 +916,94 @@ Qed.
 Theorem double_n_neq_0: forall (n: nat),
   (n <> 0) -> (n + n <> 0).
 Proof.
-  intros n. rewrite -> nat_double. intros H.
+  intros n. intros H.
   destruct n as [| n'].
   - contradiction.
   - discriminate.
+Qed.
+
+Theorem normalize_Z_is_0: forall (b: bin),
+  (normalize b = Z) -> (bin_to_nat b) = 0.
+Proof.
+  intros b. induction b as [| b' IHb' | b IHb'].
+  - reflexivity.
+  - (* steps to isolate b' from the B0 constructor *)
+    simpl. rewrite -> add_0_r.
+    (*
+      following the definiton of normalize,
+      we need to act different if (normalize b') is Z or not.
+    *)
+    destruct (normalize b') as [| _b | _b] eqn:Eb'nZ.
+    + intros H. rewrite -> ! IHb'. reflexivity. exact H.
+    (* impossible cases, only dealing with (normalize b') = Z *)
+    + discriminate.
+    + discriminate.
+  (* impossible case, only dealing with (normalize b') = Z *)
+  - simpl. discriminate.
 Qed.
 
 Theorem bin_norm_not_Z: forall (b: bin),
   (normalize b <> Z) -> (bin_to_nat b <> 0).
 Proof.
   intros b. induction b as [| b' IHb' | b IHb'].
+  (* impossible case, only dealing with (normalize b') <> Z *)
   - simpl. contradiction.
-  - simpl. rewrite -> add_0_r.
+  - (* steps to isolate b' from the B0 constructor *)
+    simpl. rewrite -> add_0_r.
+    (* act different based on whether the normalization is Z or not. *)
     destruct (normalize b') as [| _b | _b] eqn:Eb'nZ.
+    (* impossible case, only dealing with (normalize b') <> Z *)
     + contradiction.
-    + intros _H. apply double_n_neq_0.
+    (*
+      Here, (normalize b') <> 0. Therefore, there is a 1 bit in it.
+      Thus, we end up with a construct which is different than Z
+      at the top.
+    *)
+    + intros. apply double_n_neq_0.
       apply IHb'. discriminate.
-    + intros _H. apply double_n_neq_0.
+    + intros. apply double_n_neq_0.
       apply IHb'. discriminate.
   - simpl. discriminate.
 Qed.
 
+(*
+  Why I think it's true:
+    - Firstly, if n = 0, then that's the only exceptions (nat_to_bin 0 = Z).
+      Hence the precondition of n <> 0.
+    - However, if n <> 0. Then the theorem states:
+      2 * n = n << 1 where '<<' is left shift where the least significant is filled with 0.
+      As we know, this is true when no data can get lost.
+      Here, we model a binary number with undefinite amount of digits,
+      so no data is lost.
+*)
 Theorem nat_to_bin_double: forall (n: nat),
   (n <> 0) -> (nat_to_bin(2 * n) = B0 (nat_to_bin n)).
-Admitted.
-(* Proof.
+Proof.
   intros n. intros H. induction n as [| n' IHn'].
+  (* Impossible case because n = 0 *)
   - contradiction.
-  - simpl.
-Qed. *)
+  - destruct n' as [| n''] eqn:En''.
+    + (* The actual base case of the induction. n = 1. *)
+      reflexivity.
+    + (* we don't want to deal with n'', just convert it back to n' *)
+      rewrite <- En''.
+      (*
+        isolate n':
+        propagate all the Ss outside and convert them to incr calls
+      *)
+      simpl. rewrite -> add_0_r. rewrite <- plus_n_Sm. simpl.
+      (*
+        now we can easily change the left side to
+        match the induction hypothesis and use it.
+      *)
+      rewrite -> nat_double. rewrite -> En''. rewrite -> IHn'.
+      reflexivity.
+      (*
+        By using the induction hypothesis, we need to prove that S (S n'') <> 0
+        because it's the precondition. Obviously, they are 2 different constructors.
+      *)
+      discriminate.
+Qed.
 
 Theorem roundtrip_double: forall (b: bin),
   (normalize b <> Z) ->
@@ -962,7 +1013,6 @@ Proof.
   rewrite -> nat_double. rewrite -> nat_to_bin_double.
   reflexivity.
   (* prove bin_to_nat b <> 0 *)
-  (* inspired by https://www.cs.cornell.edu/courses/cs3110/2018sp/a5/coq-tactics-cheatsheet.htm *)
   apply bin_norm_not_Z. exact H.
 Qed.
 
@@ -1020,7 +1070,7 @@ Proof.
       rewrite -> roundtrip_double. simpl.
       rewrite -> IHb'. reflexivity.
       rewrite -> Eb'nZ. discriminate.
-Admitted.
+Qed.
 
 (** [] *)
 
