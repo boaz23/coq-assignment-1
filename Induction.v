@@ -605,8 +605,6 @@ Proof.
   intros n. reflexivity.
 Qed.
 
-Search plus outside Nat PeanoNat Mult ArithRing Nnat Pnat Minus Peano Gt Plus List BinPos.
-
 Theorem mult_1_l : forall n:nat, 1 * n = n.
 Proof.
   intros n. simpl. rewrite -> add_0_r. reflexivity.
