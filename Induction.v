@@ -508,7 +508,6 @@ Proof.
   rewrite -> H. reflexivity.
 Qed.
 
-
 (*
   'mult_n_Sm' was found by searching.
   I could not find a proof for it even though it does not seem to belong to a standard library of Coq (or is it?).
@@ -627,6 +626,19 @@ Proof.
   - reflexivity.
 Qed.
 
+Theorem add_shuffle4_2w3: forall (n1 n2 n3 n4 : nat),
+  (n1 + n2) + (n3 + n4) = (n1 + n3) + (n2 + n4).
+Proof.
+  intros n1 n2 n3 n4.
+  (* move the n2 closer to n4 *)
+  rewrite <- add_assoc.
+  assert (H_swap': n2 + (n3 + n4) = n3 + (n2 + n4)).
+    { rewrite -> add_shuffle3. reflexivity. }
+  rewrite -> H_swap'.
+  (* Now, just need to reorder the parenthesis. *)
+  rewrite <- add_assoc. reflexivity.
+Qed.
+
 Theorem mult_plus_distr_r : forall n m p : nat,
   (n + m) * p = (n * p) + (m * p).
 Proof.
@@ -644,17 +656,7 @@ Proof.
       Just need to set the right order of operations
       so we can use the induction hypothesis.
     *)
-    assert (H_swap: ((n * p') + n) + ((m * p') + m) = ((n * p') + (m * p')) + (n + m)).
-    {
-      (* move the n closer to m *)
-      rewrite <- add_assoc.
-      assert (H_swap': n + ((m * p') + m) = (m * p') + (n + m)).
-        { rewrite -> add_shuffle3. reflexivity. }
-      rewrite -> H_swap'.
-      (* Now, just need to reorder the parenthesis. *)
-      rewrite <- add_assoc. reflexivity.
-    }
-    rewrite -> H_swap. rewrite <- IHp'. reflexivity.
+    rewrite -> add_shuffle4_2w3. rewrite <- IHp'. reflexivity.
 Qed.
 
 Theorem mult_assoc : forall n m p : nat,
@@ -697,7 +699,16 @@ Proof.
 Theorem add_shuffle3' : forall n m p : nat,
   n + (m + p) = m + (n + p).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m p.
+  (* Move parenthesis around so that m and n are together *)
+  rewrite -> add_assoc. rewrite -> add_assoc.
+
+  (* swap their position *)
+  replace (m + n) with (n + m). reflexivity.
+
+  (* The main goal is done. Left to prove the swapping was legal *)
+  rewrite add_comm. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (binary_commute)
@@ -726,19 +737,34 @@ Proof.
     easier to prove, feel free to do so! *)
 
 Inductive bin : Type :=
-  (* FILL IN HERE *)
+  | Z
+  | B0 (n : bin)
+  | B1 (n : bin)
 .
 
-Fixpoint incr (m:bin) : bin
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint incr (m:bin) : bin :=
+  match m with
+  | Z => B1 Z
+  | B0 n => B1 n
+  | B1 n => B0 (incr n)
+  end.
 
-Fixpoint bin_to_nat (m:bin) : nat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint bin_to_nat (m:bin) : nat :=
+  match m with
+  | Z => 0
+  | B0 n => 0 + (2 * (bin_to_nat n))
+  | B1 n => 1 + (2 * (bin_to_nat n))
+  end.
 
 Theorem bin_to_nat_pres_incr : forall b : bin,
   bin_to_nat (incr b) = 1 + bin_to_nat b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b. induction b as [| n IHn | n IHn].
+  - reflexivity.
+  - simpl. reflexivity.
+  - simpl. rewrite -> ! add_0_r. rewrite -> IHn.
+    rewrite -> add_shuffle4_2w3. simpl. reflexivity.
+Qed.
 
 (** [] *)
 
