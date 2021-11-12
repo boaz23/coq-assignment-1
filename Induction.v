@@ -499,7 +499,10 @@ Theorem add_shuffle3 : forall n m p : nat,
   n + (m + p) = m + (n + p).
 Proof.
   intros n m p.
-  rewrite add_assoc. rewrite add_assoc.
+  (* Move parenthesis around so that m and n are together *)
+  rewrite -> add_assoc. rewrite -> add_assoc.
+
+  (* swap their position *)
   assert (H: m + n = n + m).
     { rewrite add_comm. reflexivity. }
   rewrite -> H. reflexivity.
@@ -515,15 +518,29 @@ Qed.
 Theorem mult_n_Sm' : forall (n m : nat),
   n * m + n = n * S m.
 Proof.
+  (* Feels like I wrote a too complex proof than necessary *)
   intros n m. induction n as [| n' IHn'].
-  - reflexivity.
-  - simpl.
-    rewrite add_comm. rewrite add_assoc. simpl.
-    (* Feels meh, have I gone on a complex path? *)
-    assert (H_swap: (n' + m) + (n' * m) = m + ((n' * m) + n')).
-      { rewrite -> add_comm. rewrite add_assoc.
-        rewrite -> add_comm. reflexivity. }
-    rewrite H_swap. rewrite IHn'. reflexivity.
+  - (* n = 0 *)
+    (*
+      All of the constants are on the side that the definitions match on,
+      so reflexivity will do here.
+    *)
+    reflexivity.
+
+  - (* n = S n' *)
+    (* Open up the definitions which use the S to get rid of it *)
+    simpl.
+    (* Group the n's together *)
+    rewrite add_comm. rewrite -> add_shuffle3.
+    (*
+      Move the S on the left side to the outside
+      so it encloses the left-side expression.
+    *)
+    simpl. rewrite add_comm. simpl. rewrite add_comm.
+    (* Swap the order of these specific addends so it matches the induction hypothesis *)
+    assert (H_swap: n' + (n' * m) = (n' * m) + n').
+      { rewrite add_comm. reflexivity. }
+    rewrite -> H_swap. rewrite -> IHn'. reflexivity.
 Qed.
 
 (** Now prove commutativity of multiplication.  You will probably want
@@ -535,7 +552,9 @@ Theorem mul_comm : forall m n : nat,
 Proof.
   intros n m. induction n as [| n' IHn'].
   - rewrite -> mul_0_r. reflexivity.
-  - simpl. rewrite <- mult_n_Sm. rewrite add_comm. rewrite IHn'. reflexivity.
+  - (* Open up operations to get rid of the Ss *)
+    simpl. rewrite <- mult_n_Sm.
+    rewrite add_comm. rewrite -> IHn'. reflexivity.
 Qed.
 (** [] *)
 
@@ -611,23 +630,47 @@ Qed.
 Theorem mult_plus_distr_r : forall n m p : nat,
   (n + m) * p = (n * p) + (m * p).
 Proof.
+  (* Feels like I wrote a too complex proof than necessary *)
   intros n m p. induction p as [| p' IHp'].
-  - rewrite ! mul_0_r. reflexivity.
-  - rewrite <- ! mult_n_Sm.
-    (* Feels meh, have I gone on a complex path? *)
-    assert (H_swap: n + (m * p' + m) = m * p' + (n + m)).
-      { rewrite add_shuffle3. reflexivity. }
-    rewrite <- add_assoc. rewrite H_swap.
-    rewrite ! add_assoc. rewrite <- IHp'.
-    reflexivity.
+  - (*
+      The zero is not on the side the definitions match on,
+      so a helper lemma is needed.
+    *)
+    rewrite ! mul_0_r. reflexivity.
+
+  - (* Open up the Ss by using the distributive property *)
+    rewrite <- ! mult_n_Sm.
+    (*
+      Just need to set the right order of operations
+      so we can use the induction hypothesis.
+    *)
+    assert (H_swap: ((n * p') + n) + ((m * p') + m) = ((n * p') + (m * p')) + (n + m)).
+    {
+      (* move the n closer to m *)
+      rewrite <- add_assoc.
+      assert (H_swap': n + ((m * p') + m) = (m * p') + (n + m)).
+        { rewrite -> add_shuffle3. reflexivity. }
+      rewrite -> H_swap'.
+      (* Now, just need to reorder the parenthesis. *)
+      rewrite <- add_assoc. reflexivity.
+    }
+    rewrite -> H_swap. rewrite <- IHp'. reflexivity.
 Qed.
 
 Theorem mult_assoc : forall n m p : nat,
   n * (m * p) = (n * m) * p.
 Proof.
   intros n m p. induction n as [| n' IHn'].
-  - reflexivity.
-  - simpl. rewrite -> mult_plus_distr_r.
+  - (*
+      All of the constants are on the side that the definitions match on,
+      so reflexivity will do here.
+    *)
+    reflexivity.
+
+  - (* Open up the definitions which use the S to get rid of it *)
+    simpl.
+    (* distribute the p to have (m*p) and be able to use the induction hypothesis *)
+    rewrite -> mult_plus_distr_r.
     rewrite <- IHn'. reflexivity.
 Qed.
 (** [] *)

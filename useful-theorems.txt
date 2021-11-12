@@ -1,5 +1,5 @@
 add_0_r: forall n : nat, n + 0 = n
-add_assoc: forall n m p : nat, n + (m + p) = n + m + p
+add_assoc: forall n m p : nat, (n + (m + p)) = ((n + m) + p)
 add_comm: forall n m : nat, n + m = m + n
 plus_O_n: forall n : nat, 0 + n = n
 plus_n_Sm: forall n m : nat, S (n + m) = n + S m
