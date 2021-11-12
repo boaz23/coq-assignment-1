@@ -13,3 +13,14 @@ mult_0_l: forall n : nat, 0 * n = 0
 mult_n_1: forall p : nat, p * 1 = p
 mult_n_0_m_0: forall p q : nat, p * 0 + q * 0 = 0
 mult_n_Sm: forall n m : nat, n * m + n = n * S m
+
+nil_app: forall l : natlist, [ ] ++ l = l
+app_nil_r: forall l : natlist, l ++ [ ] = l
+app_assoc: forall l1 l2 l3 : natlist, (l1 ++ l2) ++ l3 = l1 ++ l2 ++ l3
+rev_app_distr: forall l1 l2 : natlist, rev (l1 ++ l2) = rev l2 ++ rev l1
+app_length: forall l1 l2 : natlist, length (l1 ++ l2) = length l1 + length l2
+app_assoc4: forall l1 l2 l3 l4 : natlist, l1 ++ l2 ++ l3 ++ l4 = ((l1 ++ l2) ++ l3) ++ l4
+
+remove_does_not_increase_count: forall s : bag, (count 0 (remove_one 0 s) <=? count 0 s) = true
+bag_theorem: forall (v : nat) (s : bag), count v (add v s) = 1 + count v s
+count_member_nonzero: forall s : bag, (1 <=? count 1 (1 :: s)) = true
