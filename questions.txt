@@ -1,3 +1,3 @@
 1. remove_one is optional, but remove_does_not_increase_count is required and depends on remove_one.
 2. bag_count_sum is marked as optional but is required according to the assignment specification.
-3. Can we use untaught tactics and their variations?
+3. Can we use untaught tactics and their variations such as 'discriminate' and 'contradiction'?
