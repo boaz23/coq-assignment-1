@@ -1233,11 +1233,7 @@ Inductive baz : Type :=
   In essence what is going on here is that it's an induction without a base case.
   Thus, each element in the set of the type is of infinite length,
   there is no way to terminate the recursion.
-  In the world of formal languages, each constructor permutation models a symbol
-  and each element models a word in the formal language.
-  Therefore, we get 3 symbols (sigma = { Baz1, Baz2 (false), Baz2 (true) }).
-  Then the language is the type Baz itself where each word is of infinite length.
-  For example: Baz1 (Baz1 (Baz2 (Baz1 (Baz2 (...) true)) false)).
+  An element for example: (Baz1 (Baz1 (Baz2 (Baz1 (Baz2 (...) true)) false))).
 
   Ofcourse, none of the elements can be realized on a computer
   because that would require it to have a memory of infinite size.
