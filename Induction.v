@@ -915,9 +915,10 @@ Theorem double_n_neq_0: forall (n: nat),
   (n <> 0) -> (n + n <> 0).
 Proof.
   intros n. intros H.
-  destruct n as [| n'].
-  - contradiction.
-  - discriminate.
+  destruct n as [| n'] eqn:En.
+  - (* H: n <> 0, En: n = 0 *)
+    contradiction.
+  - simpl. discriminate.
 Qed.
 
 Theorem normalize_Z_is_0: forall (b: bin),
@@ -932,7 +933,8 @@ Proof.
       we need to act different if (normalize b') is Z or not.
     *)
     destruct (normalize b') as [| _b | _b] eqn:Eb'nZ.
-    + intros H. rewrite -> ! IHb'. reflexivity. exact H.
+    + intros H. rewrite -> ! IHb'. reflexivity.
+      { exact H. }
     (* impossible cases, only dealing with (normalize b') = Z *)
     + discriminate.
     + discriminate.
@@ -953,9 +955,10 @@ Proof.
     (* impossible case, only dealing with (normalize b') <> Z *)
     + contradiction.
     (*
-      Here, (normalize b') <> 0. Therefore, there is a 1 bit in it.
-      Thus, we end up with a construct which is different than Z
-      at the top.
+      Here, (normalize b') <> Z.
+      Therefore, after using the induction hypothesis,
+      we are left to prove that 2 different constructors
+      are different.
     *)
     + intros. apply double_n_neq_0.
       apply IHb'. discriminate.
@@ -980,11 +983,11 @@ Proof.
   intros n. intros H. induction n as [| n' IHn'].
   (* Impossible case because n = 0 *)
   - contradiction.
-  - destruct n' as [| n''] eqn:En''.
+  - destruct n' as [| n''] eqn:En'.
     + (* The actual base case of the induction. n = 1. *)
       reflexivity.
     + (* we don't want to deal with n'', just convert it back to n' *)
-      rewrite <- En''.
+      rewrite <- En'.
       (*
         isolate n':
         propagate all the Ss outside and convert them to incr calls
@@ -994,13 +997,14 @@ Proof.
         now we can easily change the left side to
         match the induction hypothesis and use it.
       *)
-      rewrite -> nat_double. rewrite -> En''. rewrite -> IHn'.
+      rewrite -> nat_double. rewrite -> En'. rewrite -> IHn'.
+      (* simplifying will result in identical expressions on both sides *)
       reflexivity.
       (*
-        By using the induction hypothesis, we need to prove that S (S n'') <> 0
+        By using the induction hypothesis, we need to prove that S n'' <> 0
         because it's the precondition. Obviously, they are 2 different constructors.
       *)
-      discriminate.
+      { discriminate. }
 Qed.
 
 Theorem roundtrip_double: forall (b: bin),
@@ -1011,7 +1015,7 @@ Proof.
   rewrite -> nat_double. rewrite -> nat_to_bin_double.
   reflexivity.
   (* prove bin_to_nat b <> 0 *)
-  apply bin_norm_not_Z. exact H.
+  { apply bin_norm_not_Z. exact H. }
 Qed.
 
 Theorem bin_nat_bin : forall b, nat_to_bin (bin_to_nat b) = normalize b.
@@ -1039,7 +1043,7 @@ Proof.
         The proof is the exact assumption the destruct gave us:
         (normalize b') = Z.
       *)
-      exact Eb'nZ.
+      { exact Eb'nZ. }
     (* B0 *)
     + (*
         Extract B0 outside on the left to match the right.
@@ -1047,27 +1051,27 @@ Proof.
       *)
       rewrite -> roundtrip_double. rewrite -> IHb'. reflexivity.
       (* prove that (normalize b') <> Z *)
-      rewrite -> Eb'nZ. discriminate.
+      { rewrite -> Eb'nZ. discriminate. }
     (* B1 *)
     (* same case as B0 (as in the definition of normalize) *)
     + rewrite -> roundtrip_double. rewrite -> IHb'. reflexivity.
-      rewrite -> Eb'nZ. discriminate.
+      { rewrite -> Eb'nZ. discriminate. }
   - (* need to open up the (B0 b') to isolate b' *)
     simpl.
     destruct (normalize b') as [| _b | _b] eqn:Eb'nZ.
     + rewrite -> ! normalize_Z_is_0. reflexivity.
-      exact Eb'nZ.
+      { exact Eb'nZ. }
     + (*
         Extract B0 outside on the left to match
         the B1 on the outside of the right.
       *)
       rewrite -> roundtrip_double. simpl.
       rewrite -> IHb'. reflexivity.
-      rewrite -> Eb'nZ. discriminate.
+      { rewrite -> Eb'nZ. discriminate. }
     + (* same case as B0 (as in the definition of normalize) *)
       rewrite -> roundtrip_double. simpl.
       rewrite -> IHb'. reflexivity.
-      rewrite -> Eb'nZ. discriminate.
+      { rewrite -> Eb'nZ. discriminate. }
 Qed.
 
 (** [] *)
