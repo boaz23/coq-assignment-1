@@ -1,5 +1,23 @@
-forall (l: natlist) (n: nat), ((length l <=? n) = true) -> (drop n l = [])
-forall (l: natlist) (n: nat), ((length l >?  n) = true) -> ((length (drop n l)) = length(l) - n)
-forall (l: natlist) (n: nat), (length (drop n l) <=? length l) = true
-forall (l: natlist) (n1 n2: nat), (drop n2 (drop n1 l)) = (drop (n1 + n2) l)
-forall (l lp: natlist) (n: nat), (length(lp) = n) -> ((drop n (lp ++ l)) = l)
+forall (l: natlist),
+  drop 0 l = l.
+
+forall (n: nat),
+  drop n [] = [].
+
+forall (l: natlist) (n: nat),
+  (length (drop n l) <=? length l) = true.
+
+forall (l: natlist) (n: nat),
+  ((length l <=? n) = true) -> (drop n l = []).
+
+forall (l: natlist) (n: nat),
+  (~(length l <?  n) = true) -> ((length (drop n l)) = length(l) - n).
+
+forall (l: natlist) (n: nat),
+  (length(l) = n) -> (drop n l = []).
+
+forall (l lp: natlist) (n: nat),
+  (length(lp) = n) -> ((drop n (lp ++ l)) = l).
+
+forall (l: natlist) (n1 n2: nat),
+  (drop n2 (drop n1 l)) = (drop (n1 + n2) l).
