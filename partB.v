@@ -32,7 +32,11 @@ Proof. reflexivity. Qed.
 Example test_drop_8: drop 7 [1;2;3;4] = [].
 Proof. reflexivity. Qed.
 
-(* Check the drop_app_split theorem. *)
+(*
+  Check the drop_app_split theorem.
+  The others were for experimentation so I would have
+  a variety of theorems to chose from. Also, It was kinda fun.
+*)
 
 Theorem n_minus_0: forall (n: nat),
   n - 0 = n.
@@ -66,8 +70,7 @@ Proof.
 Qed.
 
 (*
-  This is the one to check. The others were for
-  experimantation on which one to choose and for fun.
+  This is the one to check.
 *)
 Theorem drop_app_split: forall (l1 l2: natlist) (n: nat),
   ((drop n (l1 ++ l2)) = (drop n l1) ++ (drop (n - length(l1)) l2)).
