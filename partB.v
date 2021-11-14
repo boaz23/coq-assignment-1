@@ -136,7 +136,7 @@ Proof.
       apply IHn'. reflexivity.
 Qed.
 
-Theorem minus_n_nlt_m_leq: forall (n m: nat),
+Theorem minus_n_nlt_m: forall (n m: nat),
   ((n <? m) = false) -> ((m - n) = 0).
 Proof.
     (* Method 1 (relies on ltb being implemented using minus) *)
@@ -160,7 +160,7 @@ Proof.
   destruct (length(l1) <? n) as [|] eqn:l_l1_n.
   - discriminate.
   - intros _H. rewrite -> drop_app_split.
-    rewrite -> minus_n_nlt_m_leq. reflexivity.
+    rewrite -> minus_n_nlt_m. reflexivity.
     exact l_l1_n.
 Qed.
 *)s
