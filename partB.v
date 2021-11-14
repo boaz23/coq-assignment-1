@@ -34,6 +34,14 @@ Proof. reflexivity. Qed.
 
 (* Check the drop_app_split theorem. *)
 
+Theorem n_minus_0: forall (n: nat),
+  n - 0 = n.
+Proof.
+  intros n. destruct n as [| n'].
+  - reflexivity.
+  - reflexivity.
+Qed.
+
 (*
 Theorem list_empty: forall (l: natlist),
   ((length l) = 0) -> l = [].
@@ -72,9 +80,8 @@ Proof.
   intros l1. induction l1 as [| nl1' l1' IHl1'].
   - (* l = [] *)
     intros l2 n.
-    rewrite -> drop_empty. destruct n as [| n'].
-    + reflexivity.
-    + reflexivity.
+    rewrite -> drop_empty. rewrite -> n_minus_0.
+    reflexivity.
   - (* l = nl1' :: l' *)
     intros l2 n. simpl. destruct n as [| n'].
     + (* n = 0 *)
@@ -115,7 +122,7 @@ Proof.
     + simpl. apply IHn'.
 Qed.
 
-Theorem minus_n_nlt_m_leq: forall (n m: nat),
+Theorem nat_n_nlt_m_m_leq_n: forall (n m: nat),
   ((n <? m) = false) -> ((m <=? n) = true).
 Proof.
   intros n. induction n as [| n' IHn'].
@@ -129,6 +136,23 @@ Proof.
       apply IHn'. reflexivity.
 Qed.
 
+Theorem minus_n_nlt_m_leq: forall (n m: nat),
+  ((n <? m) = false) -> ((m - n) = 0).
+Proof.
+    (* Method 1 (relies on ltb being implemented using minus) *)
+    intros n m. unfold ltb.
+    destruct (m - n) as [| n_m_m'].
+    - reflexivity.
+    - discriminate.
+(*
+    (* Method 2 *)
+    intros n m. intros n_nlt_m.
+    apply nat_n_nlt_m_m_leq_n in n_nlt_m as m_leq_n.
+    apply minus_n_le_m in m_leq_n as m_minus_n.
+    exact m_minus_n.
+*)
+Qed.
+
 Theorem drop_app_split2: forall (l1 l2: natlist) (n: nat),
   ((length l1 <? n) = false) -> ((drop n (l1 ++ l2)) = (drop n l1) ++ l2).
 Proof.
@@ -136,9 +160,7 @@ Proof.
   destruct (length(l1) <? n) as [|] eqn:l_l1_n.
   - discriminate.
   - intros _H. rewrite -> drop_app_split.
-    apply minus_n_nlt_m_leq in l_l1_n as n_leq_len_l1.
-    apply minus_n_le_m in n_leq_len_l1 as n_minus_len_l1_eq_0.
-    rewrite -> n_minus_len_l1_eq_0.
-    reflexivity.
+    rewrite -> minus_n_nlt_m_leq. reflexivity.
+    exact l_l1_n.
 Qed.
-*)
+*)s
