@@ -166,4 +166,4 @@ Proof.
     rewrite -> minus_n_nlt_m. reflexivity.
     exact l_l1_n.
 Qed.
-*)s
+*)
