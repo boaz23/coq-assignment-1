@@ -1,5 +1,5 @@
 From LF Require Export Lists.
-Import NatList.
+Export NatList.
 
 Fixpoint drop (n: nat) (l: natlist) : natlist :=
   match n, l with
