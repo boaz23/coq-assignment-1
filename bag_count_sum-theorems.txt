@@ -1,2 +1,11 @@
-forall (v: nat) (s1 s2: bag), count v (sum s1 s2) = (count v s1) + (count v s2)
-forall (v: nat) (s1 s2: bag), count v (sum s1 s2) = count v (sum s2 s1)
+(* splitting *)
+Theorem bag_count_sum: forall (v: nat) (s1 s2: bag),
+  count v (sum s1 s2) = (count v s1) + (count v s2).
+
+(* associativity *)
+Theorem bag_count_sum: forall (v: nat) (s1 s2: bag),
+  count v (sum s1 (sum s2 s3)) = count v (sum (sum s1 s2) s3).
+
+(* commutativity *)
+Theorem bag_count_sum: forall (v: nat) (s1 s2: bag),
+  count v (sum s1 s2) = count v (sum s2 s1).
