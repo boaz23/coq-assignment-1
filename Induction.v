@@ -514,7 +514,7 @@ Qed.
   I think it was referenced in Basics.v but not proved.
   Regardless, just to stay clear, see a proof for that theorem here.
 *)
-Theorem mult_n_Sm' : forall (n m : nat),
+Theorem mult_n_Sm : forall (n m : nat),
   n * m + n = n * S m.
 Proof.
   (* Feels like I wrote a too complex proof than necessary *)
